@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hráči – SK Bělá U15</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</head>
+<body>
+<header class="site">
+  <div class="header-inner">
+    <a class="club-mark" href="index.html">
+      <span class="crest">SB</span>
+      <span class="name">SK Bělá p. Bezdězem<small>Žáci U15</small></span>
+    </a>
+    <nav class="site" id="nav"></nav>
+  </div>
+</header>
+
+<main>
+  <div class="section-label">Soupiska a docházka</div>
+  <div class="legend">
+    <span><span class="form-dot p"></span> Přítomen</span>
+    <span><span class="form-dot o"></span> Omluven</span>
+    <span><span class="form-dot n"></span> Neomluven</span>
+    <span><span class="form-dot c"></span> Trénink zrušen</span>
+  </div>
+  <div class="player-list" id="list" style="margin-top:18px;">
+    <div class="empty">Načítám…</div>
+  </div>
+</main>
+
+<footer class="site">SK Bělá pod Bezdězem &middot; Žáci U15</footer>
+
+<script>
+document.getElementById("nav").innerHTML = renderNav("hraci.html");
+
+loadAllData().then(({ players, attendance }) => {
+  const sorted = [...players].sort((a, b) => a.rocnik - b.rocnik || a.jmeno.localeCompare(b.jmeno, "cs"));
+
+  document.getElementById("list").innerHTML = sorted
+    .map((p) => {
+      const stats = playerAttendanceStats(p.jmeno, attendance);
+      const pctLabel = stats.pct === null ? "–" : stats.pct + "%";
+      const barWidth = stats.pct === null ? 0 : stats.pct;
+      const dots = stats.form.length
+        ? stats.form.map((f) => `<span class="form-dot ${f}"></span>`).join("")
+        : `<span style="font-size:12px;color:var(--ink-soft);">bez záznamů</span>`;
+
+      return `
+        <div class="player-card">
+          <div class="info">
+            <div class="pname">${p.jmeno}</div>
+            <div class="pyear">Ročník ${p.rocnik}</div>
+            <div class="form-strip" style="margin-top:6px;">${dots}</div>
+          </div>
+          <div class="pct-wrap">
+            <div>${pctLabel}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${barWidth}%"></div></div>
+          </div>
+        </div>`;
+    })
+    .join("");
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Zápasy – SK Bělá U15</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</head>
+<body>
+<header class="site">
+  <div class="header-inner">
+    <a class="club-mark" href="index.html">
+      <span class="crest">SB</span>
+      <span class="name">SK Bělá p. Bezdězem<small>Žáci U15</small></span>
+    </a>
+    <nav class="site" id="nav"></nav>
+  </div>
+</header>
+
+<main>
+  <div class="section-label">Nadcházející zápasy</div>
+  <div id="upcoming-slot"><div class="empty">Načítám…</div></div>
+
+  <div class="section-label">Odehrané zápasy</div>
+  <div id="past-slot"><div class="empty">Načítám…</div></div>
+</main>
+
+<footer class="site">SK Bělá pod Bezdězem &middot; Žáci U15</footer>
+
+<script>
+document.getElementById("nav").innerHTML = renderNav("zapasy.html");
+
+function row(m, played) {
+  const scoreTxt = played ? `${m.myGoly} : ${m.soupGoly}` : (m.cas || "");
+  return `
+    <div class="match-row">
+      <div class="left">
+        <div class="d">${fmtDate(m.datum)}</div>
+        <div class="o">${(m.typ && m.typ.toLowerCase().startsWith("v")) ? m.soupeř + " (venku)" : m.soupeř + " (doma)"}</div>
+      </div>
+      <div class="right">${scoreTxt}</div>
+    </div>`;
+}
+
+loadAllData().then(({ matches }) => {
+  const up = upcomingMatches(matches, 999);
+  const past = pastMatches(matches);
+
+  document.getElementById("upcoming-slot").innerHTML = up.length
+    ? up.map((m) => row(m, false)).join("")
+    : `<div class="empty">Žádný naplánovaný zápas</div>`;
+
+  document.getElementById("past-slot").innerHTML = past.length
+    ? past.map((m) => row(m, true)).join("")
+    : `<div class="empty">Zatím žádný odehraný zápas</div>`;
+});
+</script>
+</body>
+</html>

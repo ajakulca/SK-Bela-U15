@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SK Bělá pod Bezdězem – U15</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</head>
+<body>
+<header class="site">
+  <div class="header-inner">
+    <a class="club-mark" href="index.html">
+      <span class="crest">SB</span>
+      <span class="name">SK Bělá p. Bezdězem<small>Žáci U15</small></span>
+    </a>
+    <nav class="site" id="nav"></nav>
+  </div>
+</header>
+
+<main>
+  <div id="notice-slot"></div>
+
+  <div class="section-label">Nejbližší zápasy</div>
+  <div class="ticket-row" id="upcoming-slot">
+    <div class="empty">Načítám…</div>
+  </div>
+
+  <div class="section-label">Poslední zápas</div>
+  <div id="report-slot">
+    <div class="empty">Načítám…</div>
+  </div>
+</main>
+
+<footer class="site">SK Bělá pod Bezdězem &middot; Žáci U15 &middot; trenéři Martin Kulczycki a Dominik Glaser</footer>
+
+<script>
+document.getElementById("nav").innerHTML = renderNav("index.html");
+
+function matchLine(m) {
+  const tag = m.typ && m.typ.toLowerCase().startsWith("v") ? "away" : "home";
+  const tagLabel = tag === "away" ? "Venku" : "Doma";
+  return `
+    <div class="ticket">
+      <span class="tag ${tag}">${tagLabel}</span>
+      <div class="when">${fmtDate(m.datum)}${m.cas ? " · " + m.cas : ""}</div>
+      <div class="opp">vs ${m.soupeř || "?"}</div>
+      <div class="where">${m.misto || ""}</div>
+    </div>`;
+}
+
+function reportCard(m) {
+  const played = m.myGoly !== "" && m.soupGoly !== "";
+  const scoreLine = played
+    ? `<div class="score">${m.myGoly} : ${m.soupGoly}</div>`
+    : `<div class="score mono">–</div>`;
+  const nomList = m.nominace.length
+    ? `<ul>${m.nominace.map((n) => `<li>${n}</li>`).join("")}</ul>`
+    : `<p style="opacity:.6;font-size:14px;">Nominace nezadána</p>`;
+  const scorersList = m.strelci.length
+    ? `<ul>${m.strelci.map((s) => `<li>${s}</li>`).join("")}</ul>`
+    : `<p style="opacity:.6;font-size:14px;">Bez zadaných střelců</p>`;
+
+  return `
+    <div class="report">
+      <div class="score-line">
+        <span class="vs">SK Bělá</span>
+        ${scoreLine}
+        <span class="vs">${m.soupeř || "?"}</span>
+      </div>
+      <div class="meta">${fmtDate(m.datum)} &middot; ${m.misto || "místo neuvedeno"}</div>
+      <div class="cols">
+        <div>
+          <h4>Nominace</h4>
+          ${nomList}
+        </div>
+        <div>
+          <h4>Střelci</h4>
+          ${scorersList}
+        </div>
+      </div>
+    </div>`;
+}
+
+loadAllData().then(({ matches, usingSheet }) => {
+  if (!usingSheet) {
+    document.getElementById("notice-slot").innerHTML = `
+      <div class="notice">Zatím se zobrazuje jen počáteční soupiska hráčů – zápasy a docházka se
+      objeví, jakmile v <code>config.js</code> propojíš Google tabulku (viz README.md).</div>`;
+  }
+
+  const up = upcomingMatches(matches, 3);
+  document.getElementById("upcoming-slot").innerHTML = up.length
+    ? up.map(matchLine).join("")
+    : `<div class="empty">Žádný naplánovaný zápas</div>`;
+
+  const past = pastMatches(matches);
+  document.getElementById("report-slot").innerHTML = past.length
+    ? reportCard(past[0])
+    : `<div class="empty">Zatím žádný odehraný zápas</div>`;
+});
+</script>
+</body>
+</html>
